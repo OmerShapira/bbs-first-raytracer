@@ -15,6 +15,7 @@ class Primitive
 {
 public:
 	virtual float intersect(Ray const& Ray) = 0;
+	virtual vec3 normal(vec3 const& surface_point) = 0;
 };
 
 class Sphere : public Primitive
@@ -42,8 +43,13 @@ public:
 		}
 		else
 		{
-			return (-b + sqrt(discriminant)) / (2.0 * a);
+			return (-b - sqrt(discriminant)) / (2.0 * a);
 		}
+	}
+
+	vec3 normal(vec3 const& surface_point) override
+	{
+		return surface_point - center;
 	}
 
 	vec3 center;
