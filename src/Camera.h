@@ -26,14 +26,22 @@ public:
 	{
 		//offset from pixel top-left
 		vec2 offset(0.5, 0.5);
-		if (rand == Randomization::MonteCarlo)
+
+		switch (rand)
 		{
+		case Randomization::None: 
+			break;
+		case Randomization::MonteCarlo:
 			offset += linearRand(vec2(-0.5), vec2(0.5));
+			break;
+		default:
+			break;
 		}
-		vec2 pos = ((vec2(image_pos) - vec2(image_size) * 0.5f) + offset) * scale / float(image_size.x);
+		
+		vec2 pos = ((vec2(image_pos) - half_img_size__) + offset) * pixel_scale__;
 		//TODO (OS): Impl rotation
 		vec3 origin = location - vec3(0, 0, dist_to_origin);
-		vec3 direction = vec3(pos.x, pos.y, 0) - vec3(0, 0, dist_to_origin);
+		vec3 direction = vec3(pos.x, pos.y, -dist_to_origin);
 		return Ray(origin, direction);
 	}
 
@@ -45,11 +53,22 @@ public:
 		dist_to_origin = (scale * 0.5) / tg_half_fov;
 	}
 
+	void set_image_size(ivec2 const& size)
+	{
+		image_size = size;
+		half_img_size__ = vec2(image_size) * 0.5f;
+		pixel_scale__ = scale / float(image_size.x);
+	}
+
 	vec3 location, rotation;
-	ivec2 image_size{ 512, 256 };
 	float clip_near, clip_far;
 
 private:
+
+	ivec2 image_size{ 512, 256 };
+	vec2 half_img_size__;
+	float pixel_scale__;
+	
 	float scale{ 1 };
 	float fov_h{ 90 };
 	float dist_to_origin;

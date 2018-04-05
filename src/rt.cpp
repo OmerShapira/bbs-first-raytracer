@@ -65,7 +65,7 @@ int trace(int w, int h, unsigned char * img)
 {
 	Camera camera;
 	//camera.location.z = ;
-	camera.image_size = ivec2(w, h);
+	camera.set_image_size(ivec2(w, h));
 	for (int j = 0; j < h; ++j)
 	{
 		for (int i = 0; i < w; ++i)
