@@ -2,8 +2,8 @@
 
 #include <3rdparty/glm/glm.hpp>
 #include <3rdparty/glm/gtc/random.hpp>
+#include <3rdparty/glm/gtc/quaternion.hpp>
 #include "ray.h"
-//#include <3rdparty/glm/>
 
 using namespace glm;
 
@@ -41,7 +41,7 @@ public:
 		vec2 pos = ((vec2(image_pos) - half_img_size__) + offset) * pixel_scale__;
 		//TODO (OS): Impl rotation
 		vec3 origin = location - vec3(0, 0, dist_to_origin);
-		vec3 direction = vec3(pos.x, pos.y, -dist_to_origin);
+		vec3 direction = vec3(pos.x, pos.y, dist_to_origin);
 		return Ray(origin, direction);
 	}
 

@@ -14,12 +14,11 @@
 #include <geometry.h>
 #include <Camera.h>
 
-using glm::vec3;
 using std::shared_ptr;
 using std::make_shared;
 using namespace geometry;
 
-std::vector< shared_ptr<Primitive> > primitives;
+std::vector< shared_ptr<Hitable> > primitives;
 
 inline vec3 lerp(vec3 const v1, vec3 const v2, float t)
 {
@@ -29,7 +28,7 @@ inline vec3 lerp(vec3 const v1, vec3 const v2, float t)
 vec3 color(Ray const& r)
 {
 	//try to intersect some objects for visibility
-	for (shared_ptr<Primitive> const p : primitives)
+	for (shared_ptr<Hitable> const p : primitives)
 	{
 		float intersection = p->intersect(r);
 		if (intersection > 0)
@@ -87,7 +86,8 @@ int main()
 	int const w = 512, h = 256;
 	unsigned char *img = new unsigned char[w * h * 3];
 
-	primitives.push_back(make_shared<Sphere>(vec3(0, 0, -10), 3));
+	primitives.push_back(make_shared<Sphere>(vec3(0, 3, 10), 3));
+	primitives.push_back(make_shared<Sphere>(vec3(0, -100, 0), 100));
 	
 	int result;
 	prev = clock();

@@ -11,14 +11,20 @@ float sum_parts(vec3 const& v)
 	return v.x + v.y + v.z;
 }
 
-class Primitive 
+class Hitable 
 {
 public:
 	virtual float intersect(Ray const& Ray) = 0;
 	virtual vec3 normal(vec3 const& surface_point) = 0;
 };
 
-class Sphere : public Primitive
+class HitableList : public Hitable
+{
+private:
+	std::vector<std::shared_ptr<Hitable> > list;
+};
+
+class Sphere : public Hitable
 {
 	
 public:
