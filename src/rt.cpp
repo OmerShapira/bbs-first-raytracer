@@ -18,26 +18,22 @@ using std::shared_ptr;
 using std::make_shared;
 using namespace geometry;
 
-std::vector< shared_ptr<Hitable> > primitives;
+HitableList world;
 
 inline vec3 lerp(vec3 const v1, vec3 const v2, float t)
 {
 	return v1 * (1 - t) + v2 * t;
 }
 
-vec3 color(Ray const& r)
+vec3 color(Ray const& r, Hitable *world)
 {
 	//try to intersect some objects for visibility
-	for (shared_ptr<Hitable> const p : primitives)
+	HitRecord rec;
+	bool intersection = world->Intersect(r, vec2(0.5, 100000), rec);
+	if (intersection)
 	{
-		float intersection = p->intersect(r);
-		if (intersection > 0)
-		{
-			vec3 normal = p->normal(r.at(intersection));
-			normal /= normal.length();
-			normal = (normal * vec3(0.5) + vec3(0.5));
-			return normal;
-		}
+		vec3 normal = rec.normal * vec3(0.5) + vec3(0.5);
+		return normal;
 	}
 
 	//let's apply some minimal shading
@@ -54,7 +50,7 @@ vec3 sample(Camera const& camera, ivec2 const& pos, int const num_samples, Rando
 	for (int i = 0; i < num_samples; ++i)
 	{
 		Ray r = camera.make_ray(pos, randomization);
-		accum += color(r);
+		accum += color(r, &world);
 	}
 	accum *= 1.0f / num_samples;
 	return accum;
@@ -63,7 +59,7 @@ vec3 sample(Camera const& camera, ivec2 const& pos, int const num_samples, Rando
 int trace(int w, int h, unsigned char * img)
 {
 	Camera camera;
-	//camera.location.z = ;
+	camera.location = vec3(0, 5, -5);
 	camera.set_image_size(ivec2(w, h));
 	for (int j = 0; j < h; ++j)
 	{
@@ -86,8 +82,8 @@ int main()
 	int const w = 512, h = 256;
 	unsigned char *img = new unsigned char[w * h * 3];
 
-	primitives.push_back(make_shared<Sphere>(vec3(0, 3, 10), 3));
-	primitives.push_back(make_shared<Sphere>(vec3(0, -100, 0), 100));
+	world.Add(make_shared<Sphere>(vec3(0, 3, 10), 3));
+	world.Add(make_shared<Sphere>(vec3(0, -100, 0), 100));
 	
 	int result;
 	prev = clock();
