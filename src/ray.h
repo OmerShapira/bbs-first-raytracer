@@ -2,6 +2,8 @@
 #include <3rdparty/glm/vec3.hpp>
 using glm::vec3;
 
+class Material;
+
 class Ray
 {
 public:
@@ -18,4 +20,5 @@ struct HitRecord
 	float t;
 	vec3 point;
 	vec3 normal;
+	Material* mat;
 };
