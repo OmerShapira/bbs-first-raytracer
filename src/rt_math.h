@@ -29,6 +29,15 @@ bool refract(vec3 in, vec3 normal, float ni_over_no, vec3& refracted)
 	}
 }
 
+float schlick(float costheta, float index)
+{
+	float r0 = (1 - index) / (1 + index);
+	r0 *= r0;
+	float z = (1 - costheta);
+	z = z * z * z * z * z;
+	return r0 + (1 - r0) * z;
+}
+
 
 vec3 sample_in_sphere(vec3 center, vec3 radius)
 {

@@ -1,7 +1,7 @@
 #pragma once
-#include <3rdparty/glm/vec3.hpp>
 #include <iostream>
 #include <memory>
+#include <3rdparty/glm/vec3.hpp>
 using glm::vec3;
 
 class Material;

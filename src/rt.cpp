@@ -79,14 +79,14 @@ vec3 sample(Camera const& camera, ivec2 const& pos, int const num_samples, Rando
 int trace(int w, int h, unsigned char * img)
 {
 	Camera camera;
-	camera.location = vec3(0, 0, -1);
+	camera.location = vec3(0, 0, -1.5);
 	camera.set_image_size(ivec2(w, h));
 	for (int j = 0; j < h; ++j)
 	{
 		#pragma omp parallel for
 		for (int i = 0; i < w; ++i)
 		{
-			vec3 c = sample(camera, ivec2(i, j), 16, Randomization::MonteCarlo);
+			vec3 c = sample(camera, ivec2(i, j), 64, Randomization::MonteCarlo);
 			c = sqrt(c);
 			//magic number for float truncation
 			img[(j*w + i) * 3 + 0] = int(c.r * 255.99);
@@ -110,8 +110,8 @@ int main()
 	s2->material = make_shared<Lambertian>(vec3(0.1, 0.1, 0.8));
 	
 	auto s3 = make_shared<Sphere>(vec3(1, 0, 0), 0.5f);
-	s3->material = make_shared<Metal>(vec3(0.8, 0.8, 0.8), 0.2);
-	auto s4 = make_shared<Sphere>(vec3(-1.5, 0, 2), 0.5f);
+	s3->material = make_shared<Metal>(vec3(0.8, 0.8, 0.8), 0.05);
+	auto s4 = make_shared<Sphere>(vec3(-1.5, 0, 2), 2.f);
 	s4->material = make_shared<Metal>(vec3(0.8, 0.6, 0.1));
 	
 	auto s5 = make_shared<Sphere>(vec3(-0.5, -0.25, -0.5), 0.25f);
@@ -121,7 +121,7 @@ int main()
 	world.Add(s2);
 	world.Add(s3);
 	world.Add(s4);
-	//world.Add(s5);
+	world.Add(s5);
 
 	int result;
 	result = trace(w, h, img);

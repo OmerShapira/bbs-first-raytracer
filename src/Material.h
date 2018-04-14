@@ -4,6 +4,8 @@
 #include "ray.h"
 #include "rt_math.h"
 
+using namespace glm;
+
 class Material
 {
 public:
@@ -63,27 +65,33 @@ public:
 	{
 		vec3 outward_normal;
 		float ni_over_no;
+		float reflected_prob, costheta;
 		vec3 refracted; 
-		vec3 reflected = reflect(ray_in.direction, rec.normal);
 		attenuation = vec3(1.f);
 		if (dot(ray_in.direction, rec.normal) > 0)
 		{
 			outward_normal = -rec.normal;
 			ni_over_no = Index;
+			costheta = Index * dot(ray_in.direction, rec.normal) / ray_in.direction.length();
 		}
 		else
 		{
 			outward_normal = rec.normal;
 			ni_over_no = 1.f / Index;
+			costheta = - Index * dot(ray_in.direction, rec.normal) / ray_in.direction.length();
 		}
 		if (refract(ray_in.direction, outward_normal, ni_over_no, refracted))
 		{
-			ray_scattered = Ray(rec.point, refracted);
+			reflected_prob = schlick(costheta, Index);
 		}
 		else
 		{
-			ray_scattered = Ray(rec.point, reflected);
+			reflected_prob = 1.0f;
 		}
+
+		vec3 out = (linearRand(0.f,1.f) < reflected_prob) ?
+			reflect(ray_in.direction, rec.normal) : refracted;
+		ray_scattered = Ray(rec.point, out);
 		return true;
 	}
 
