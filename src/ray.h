@@ -1,5 +1,7 @@
 #pragma once
 #include <3rdparty/glm/vec3.hpp>
+#include <iostream>
+#include <memory>
 using glm::vec3;
 
 class Material;
@@ -20,5 +22,5 @@ struct HitRecord
 	float t;
 	vec3 point;
 	vec3 normal;
-	Material* mat;
+	std::shared_ptr<Material> mat;
 };

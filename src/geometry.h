@@ -1,5 +1,7 @@
 #pragma once
 #include <3rdparty\glm\glm.hpp>
+#include "rt_math.h"
+#include "Material.h"
 #include "ray.h"
 
 using namespace glm;
@@ -8,15 +10,12 @@ using std::shared_ptr;
 namespace geometry
 {
 
-float sum_parts(vec3 const& v)
-{
-	return v.x + v.y + v.z;
-}
 
 class Hitable 
 {
 public:
 	virtual bool Intersect(Ray const& ray, vec2 t_range, HitRecord& rec) = 0;
+	shared_ptr<Material> material;
 };
 
 class HitableList : public Hitable
@@ -79,7 +78,9 @@ public:
 				rec.t = t;
 				rec.point = ray.At(rec.t);
 				rec.normal = Normal(rec.point);
+				rec.mat = material;
 				return true;
+
 			}
 			t = (-b + sqrt(discriminant)) / (2.0 * a);
 			if (t > t_range.x && t < t_range.y)
@@ -87,6 +88,7 @@ public:
 				rec.t = t;
 				rec.point = ray.At(rec.t);
 				rec.normal = Normal(rec.point);
+				rec.mat = material;
 				return true;
 			}
 		}
