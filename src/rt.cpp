@@ -43,7 +43,7 @@ vec3 color(Ray const& r, Hitable *world, int recursion_num)
 		Ray scattered(vec3(0), vec3(0));
 		vec3 attenuation;
 		bool does_scatter = rec.mat->Scatter(r, rec, attenuation, scattered);
-		if (does_scatter && (recursion_num < 16))
+		if (does_scatter && (recursion_num < 8))
 		{
 			return attenuation * color(scattered, world, recursion_num + 1);
 		}
@@ -78,14 +78,15 @@ vec3 sample(Camera const& camera, ivec2 const& pos, int const num_samples, Rando
 
 int trace(int w, int h, unsigned char * img)
 {
-	Camera camera(90.f, vec3(0., 0., -2.f), vec3(0.,1.,0.), vec3(0., 0., 0), 0.05);
+	vec3 pos = vec3(8.5, 1.8, -2.4f);
+	Camera camera(58.f, pos, vec3(0., 1., 0.), vec3(0., 0., 0), length(pos - vec3(4,1,0)), .075);
 	camera.set_image_size(ivec2(w, h));
 	for (int j = 0; j < h; ++j)
 	{
 		#pragma omp parallel for
 		for (int i = 0; i < w; ++i)
 		{
-			vec3 c = sample(camera, ivec2(i, j), 32, Randomization::MonteCarlo);
+			vec3 c = sample(camera, ivec2(i, j), 512, Randomization::MonteCarlo);
 			c = sqrt(c);
 			//magic number for float truncation
 			img[(j*w + i) * 3 + 0] = int(c.r * 255.99);
@@ -98,9 +99,10 @@ int trace(int w, int h, unsigned char * img)
 
 int main()
 {
-	int const w = 512, h = 256;
+	int const w = 1024, h = 512;
 	unsigned char *img = new unsigned char[w * h * 3];
 
+	/*
 	//Hero
 	auto s1 = make_shared<Sphere>(vec3(0, 0, 0), 0.5f);
 	s1->material = make_shared<Lambertian>(vec3(0.7, 0.2, 0.2));
@@ -122,6 +124,53 @@ int main()
 	world.Add(s4);
 	world.Add(s5);
 
+	*/
+	int n = 11;
+	
+	auto s0 = make_shared<Sphere>(vec3(0, -1000, 0), 1000);
+	s0->material = make_shared<Lambertian>(vec3(0.2f, 0.2, 0.7));
+	world.Add(s0);
+
+
+	for (int a = -n; a < n; ++a)
+	{
+		for (int b = -n; b < n; ++b)
+		{
+			float choose_mat = linearRand(0.f, 1.f);
+			vec3 center(a + 0.9* linearRand(0.f, 1.f), 0.2, b + 0.9 * linearRand(0.f, 1.f));
+			auto sphere = make_shared<Sphere>(center, 0.2f);
+			if (length(center - vec3(4.0, 0.2, 0)) > .9)
+			{
+				if (choose_mat < 0.8)
+				{
+					vec3 c = linearRand(vec3(0.f), vec3(1.f));
+					c = c*c;
+					sphere->material = make_shared<Lambertian>(c);
+				}
+				else if (choose_mat < 0.95)
+				{
+					sphere->material = make_shared<Metal>(linearRand(vec3(.5f), vec3(1.f)), linearRand(0.f, 0.5f));
+				}
+				else
+				{
+					sphere->material = make_shared<Dielectric>(1.5);
+				}
+				world.Add(sphere);
+			}
+		}
+	}
+
+	auto s1 = make_shared<Sphere>(vec3(0, 1, 0), 1.0);
+	s1->material = make_shared<Dielectric>(1.5);
+	world.Add(s1);
+	auto s2 = make_shared<Sphere>(vec3(-4, 1, 0), 1.0);
+	s2->material = make_shared<Lambertian>(vec3(0.5, 0.2, 0.5));
+	world.Add(s2);
+	auto s3 = make_shared<Sphere>(vec3(4, 1, 0), 1.0);
+	s3->material = make_shared<Metal>(vec3(0.7, 0.6, 0.5), 0);
+	world.Add(s3);
+
+	
 	int result;
 	result = trace(w, h, img);
 

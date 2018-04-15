@@ -17,10 +17,10 @@ class Camera
 {
 public:
 
-	Camera(float fov_h, vec3 location, vec3 vup, vec3 lookat, float aperture): location(location), aperture(aperture)
+	Camera(float fov_h, vec3 location, vec3 vup, vec3 lookat, float focus_dist, float aperture): location(location), focus_dist(focus_dist), aperture(aperture)
 	{
 		set_fov_h(fov_h);
-		scale = length(location - lookat);
+		//focus_dist = length(location - lookat);
 		//backness
 		w = normalize(location - lookat);
 		//rightness
@@ -47,7 +47,7 @@ public:
 		vec2 pos_imgplane = (vec2(image_pos) + offset_imgplane - half_img_size__);
 		vec2 lensOffset = sample_in_disk(vec2(0.f), vec2(aperture * 0.5f));
 		vec2 st = pos_imgplane * imageplane_dims__;
-		vec3 pos_worldspace = location + scale * (-w + u * st.x + v * st.y);
+		vec3 pos_worldspace = location + focus_dist * (-w + u * st.x + v * st.y);
 		return Ray(location + u * lensOffset.x + v * lensOffset.y, normalize(pos_worldspace - location - u * lensOffset.x - v * lensOffset.y));
 	}
 
@@ -84,6 +84,6 @@ private:
 	vec2 imageplane_dims__;
 	float pixel_scale__;
 	
-	float scale{ 1 };
+	float focus_dist{ 1 };
 	float fov_h{ 90 };
 };
