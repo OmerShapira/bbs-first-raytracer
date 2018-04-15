@@ -9,6 +9,11 @@
 #include <3rdparty/stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <3rdparty/stb_image_write.h>
+
+
+#define GLM_FORCE_SSE42 //if your processor supports it
+#define GLM_FORCE_ALIGNED
+
 #include <3rdparty/glm/vec3.hpp>
 #include <3rdparty/glm/gtc/random.hpp>
 
@@ -17,6 +22,7 @@
 #include <geometry.h>
 #include <Camera.h>
 #include <Material.h>
+
 
 using std::shared_ptr;
 using std::make_shared;
@@ -127,9 +133,8 @@ int main()
 	*/
 	int n = 11;
 	
-	auto s0 = make_shared<Sphere>(vec3(0, -1000, 0), 1000);
-	s0->material = make_shared<Lambertian>(vec3(0.2f, 0.2, 0.7));
-	world.Add(s0);
+	world.list.emplace_back(vec3(0, -1000, 0), 1000);
+	world.list[world.list.size()-1].material = make_shared<Lambertian>(vec3(0.2f, 0.2, 0.7));
 
 
 	for (int a = -n; a < n; ++a)
@@ -138,37 +143,34 @@ int main()
 		{
 			float choose_mat = linearRand(0.f, 1.f);
 			vec3 center(a + 0.9* linearRand(0.f, 1.f), 0.2, b + 0.9 * linearRand(0.f, 1.f));
-			auto sphere = make_shared<Sphere>(center, 0.2f);
+			//auto sphere = make_shared<Sphere>(center, 0.2f);
 			if (length(center - vec3(4.0, 0.2, 0)) > .9)
 			{
+				Sphere & sphere = world.list.emplace_back(center, 0.2f);
 				if (choose_mat < 0.8)
 				{
 					vec3 c = linearRand(vec3(0.f), vec3(1.f));
 					c = c*c;
-					sphere->material = make_shared<Lambertian>(c);
+					sphere.material = make_shared<Lambertian>(c);
 				}
 				else if (choose_mat < 0.95)
 				{
-					sphere->material = make_shared<Metal>(linearRand(vec3(.5f), vec3(1.f)), linearRand(0.f, 0.5f));
+					sphere.material = make_shared<Metal>(linearRand(vec3(.5f), vec3(1.f)), linearRand(0.f, 0.5f));
 				}
 				else
 				{
-					sphere->material = make_shared<Dielectric>(1.5);
+					sphere.material = make_shared<Dielectric>(1.5);
 				}
-				world.Add(sphere);
 			}
 		}
 	}
 
-	auto s1 = make_shared<Sphere>(vec3(0, 1, 0), 1.0);
-	s1->material = make_shared<Dielectric>(1.5);
-	world.Add(s1);
-	auto s2 = make_shared<Sphere>(vec3(-4, 1, 0), 1.0);
-	s2->material = make_shared<Lambertian>(vec3(0.5, 0.2, 0.5));
-	world.Add(s2);
-	auto s3 = make_shared<Sphere>(vec3(4, 1, 0), 1.0);
-	s3->material = make_shared<Metal>(vec3(0.7, 0.6, 0.5), 0);
-	world.Add(s3);
+	Sphere & s1 = world.list.emplace_back(vec3(0, 1, 0), 1.0);
+	s1.material = make_shared<Dielectric>(1.5);
+	Sphere & s2 = world.list.emplace_back(vec3(-4, 1, 0), 1.0);
+	s2.material = make_shared<Lambertian>(vec3(0.5, 0.2, 0.5));
+	Sphere & s3 = world.list.emplace_back(vec3(4, 1, 0), 1.0);
+	s3.material = make_shared<Metal>(vec3(0.7, 0.6, 0.5), 0);
 
 	
 	int result;
