@@ -3,6 +3,7 @@
 #include "3rdparty\glm\gtc\random.hpp"
 
 using glm::vec3;
+using glm::vec2;
 
 float sum_parts(vec3 const& v)
 {
@@ -45,6 +46,16 @@ vec3 sample_in_sphere(vec3 center, vec3 radius)
 	do 
 	{ 
 		out = linearRand(vec3(-1), vec3(1)); 
+	} while (dot(out, out) >= 1);
+	return out * radius + center;
+}
+
+vec2 sample_in_disk(vec2 center, vec2 radius)
+{
+	vec2 out;
+	do
+	{
+		out = linearRand(vec2(-1.f), vec2(1.f));
 	} while (dot(out, out) >= 1);
 	return out * radius + center;
 }

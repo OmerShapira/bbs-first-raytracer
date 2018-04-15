@@ -17,61 +17,73 @@ class Camera
 {
 public:
 
-	Camera()
+	Camera(float fov_h, vec3 location, vec3 vup, vec3 lookat, float aperture): location(location), aperture(aperture)
 	{
-		set_fov_h(90);
+		set_fov_h(fov_h);
+		scale = length(location - lookat);
+		//backness
+		w = normalize(location - lookat);
+		//rightness
+		u = normalize(cross(w, vup));
+		//downness
+		v = cross(w, u);
 	}
 
 	Ray make_ray(ivec2 const & image_pos, Randomization rand) const
 	{
 		//offset from pixel top-left
-		vec2 offset(0.5, 0.5);
-
+		vec2 offset_imgplane(0.5, 0.5);
 		switch (rand)
 		{
 		case Randomization::None: 
 			break;
 		case Randomization::MonteCarlo:
-			offset += linearRand(vec2(-0.5), vec2(0.5));
+			offset_imgplane += linearRand(vec2(-0.5), vec2(0.5));
 			break;
 		default:
 			break;
 		}
 		
-		vec2 pos = ((vec2(image_pos) - half_img_size__) + offset) * pixel_scale__;
-		//convert to screen space coords
-		pos *= vec2(1, -1);
-		//TODO (OS): Impl rotation
-		vec3 origin = location - vec3(0, 0, dist_to_origin);
-		vec3 direction = vec3(pos.x, pos.y, dist_to_origin);
-		return Ray(origin, direction);
+		vec2 pos_imgplane = (vec2(image_pos) + offset_imgplane - half_img_size__);
+		vec2 lensOffset = sample_in_disk(vec2(0.f), vec2(aperture * 0.5f));
+		vec2 st = pos_imgplane * imageplane_dims__;
+		vec3 pos_worldspace = location + scale * (-w + u * st.x + v * st.y);
+		return Ray(location + u * lensOffset.x + v * lensOffset.y, normalize(pos_worldspace - location - u * lensOffset.x - v * lensOffset.y));
 	}
 
 	void set_fov_h(float degrees)
 	{
 		if ((degrees < 0) || (degrees > 180)) return;
 		fov_h = degrees;
-		float tg_half_fov = tan(radians(fov_h * 0.5));
-		dist_to_origin = (scale * 0.5) / tg_half_fov;
+		calc_image_plane();
 	}
 
 	void set_image_size(ivec2 const& size)
 	{
 		image_size = size;
 		half_img_size__ = vec2(image_size) * 0.5f;
-		pixel_scale__ = scale / float(image_size.x);
+		pixel_scale__ = 1 / float(image_size.x);
+		calc_image_plane();
 	}
-
-	vec3 location, rotation;
-	float clip_near, clip_far;
+	
+	float aperture{0};
+	vec3 location;
 
 private:
 
+	void calc_image_plane()
+	{
+		float inv_aspect_ratio = image_size.y * 1.f / image_size.x;
+		float half_width = tan(radians(fov_h * 0.5));
+		imageplane_dims__ = vec2(half_width * 1.f/image_size.x, half_width * inv_aspect_ratio * 1.f/image_size.y) * 2.0f;
+	}
+
+	vec3 u, v, w;
 	ivec2 image_size{ 512, 256 };
 	vec2 half_img_size__;
+	vec2 imageplane_dims__;
 	float pixel_scale__;
 	
 	float scale{ 1 };
 	float fov_h{ 90 };
-	float dist_to_origin;
 };

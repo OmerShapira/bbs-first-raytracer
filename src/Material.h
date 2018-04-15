@@ -72,13 +72,13 @@ public:
 		{
 			outward_normal = -rec.normal;
 			ni_over_no = Index;
-			costheta = Index * dot(ray_in.direction, rec.normal) / ray_in.direction.length();
+			costheta = Index * dot(ray_in.direction, rec.normal) / length(ray_in.direction);
 		}
 		else
 		{
 			outward_normal = rec.normal;
 			ni_over_no = 1.f / Index;
-			costheta = - Index * dot(ray_in.direction, rec.normal) / ray_in.direction.length();
+			costheta = - Index * dot(ray_in.direction, rec.normal) / length(ray_in.direction);
 		}
 		if (refract(ray_in.direction, outward_normal, ni_over_no, refracted))
 		{
