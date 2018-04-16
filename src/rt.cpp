@@ -1,8 +1,6 @@
 #include <iostream>
-#include <string>
 #include <vector>
 #include <memory>
-#include <time.h>
 #include <omp.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -30,8 +28,8 @@ using std::shared_ptr;
 using std::make_shared;
 using namespace geometry;
 
-int const RECURSION_DEPTH = 6;
-int const NUM_SAMPLES = 32;
+int const RECURSION_DEPTH = 8;
+int const NUM_SAMPLES = 256;
 int const w = 512, h = 256;
 
 vec3 color(Ray const& r, Hitable& world, int recursion_num)
@@ -104,39 +102,13 @@ int main()
 	unsigned char *img = new unsigned char[w * h * 3];
 
 	HitableList world;
-/*	
-	//Hero
-	auto s1 = make_shared<Sphere>(vec3(0, 0, 0), 0.5f);
-	s1->material = make_shared<Lambertian>(vec3(0.7, 0.2, 0.2));
-	//Floor
-	auto s2 = make_shared<Sphere>(vec3(0, -100.5f, 0), 100);
-	s2->material = make_shared<Lambertian>(vec3(0.1, 0.1, 0.8));
-	
-	auto s3 = make_shared<Sphere>(vec3(1, 0, 0), 0.5f);
-	s3->material = make_shared<Metal>(vec3(0.8, 0.8, 0.8), 0.05);
-	auto s4 = make_shared<Sphere>(vec3(-1.5, 0, 2), 1.f);
-	s4->material = make_shared<Metal>(vec3(0.8, 0.6, 0.1));
-	
-	auto s5 = make_shared<Sphere>(vec3(-0.5, -0.25, -0.5), 0.25f);
-	s5->material = make_shared<Dielectric>(1.33);
-
-	world.Add(s1);
-	world.Add(s2);
-	world.Add(s3);
-	world.Add(s4);
-	world.Add(s5);
-	BVHNode bvh(world);
-
-*/	
-
-
 
 	int n = 4;
 	
-	auto s0 = make_shared<Sphere>(vec3(0, -1000, 0), 1000);
-	s0->material = make_shared<Lambertian>(vec3(0.2f, 0.2, 0.7));
-	world.Add(s0);
-
+	//hacky floor in the form of a sphere
+	auto floor = make_shared<Sphere>(vec3(0, -1000, 0), 1000);
+	floor->material = make_shared<Lambertian>(vec3(0.2f, 0.2, 0.7));
+	world.Add(floor);
 
 	for (int a = -n; a < n; ++a)
 	{
@@ -166,18 +138,18 @@ int main()
 		}
 	}
 
-	auto s1 = make_shared<Sphere>(vec3(0, 1, 0), 1.0);
-	s1->material = make_shared<Dielectric>(1.5);
-	auto s2 = make_shared<Sphere>(vec3(-4, 1, 0), 1.0);
-	s2->material = make_shared<Lambertian>(vec3(0.5, 0.2, 0.5));
-	auto s3 = make_shared<Sphere>(vec3(4, 1, 0), 1.0);
-	s3->material = make_shared<Metal>(vec3(0.7, 0.6, 0.5), 0);
-	world.Add(s1);
-	world.Add(s2);
-	world.Add(s3);
+	//Hero spheres
+	auto crazy = make_shared<Sphere>(vec3(0, 1, 0), 1.0);
+	crazy->material = make_shared<Dielectric>(1.5);
+	auto sexy = make_shared<Sphere>(vec3(-4, 1, 0), 1.0);
+	sexy->material = make_shared<Lambertian>(vec3(0.5, 0.2, 0.5));
+	auto cool = make_shared<Sphere>(vec3(4, 1, 0), 1.0);
+	cool->material = make_shared<Metal>(vec3(0.7, 0.6, 0.5), 0);
+	world.Add(crazy);
+	world.Add(sexy);
+	world.Add(cool);
 
 	BVHNode bvh(world);
-
 	
 	int result;
 	result = trace(bvh, w, h, img);

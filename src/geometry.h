@@ -55,6 +55,7 @@ namespace geometry
 			t_min = glm::max(t_min, t_range.x);
 			t_max = glm::min(t_max, t_range.y);
 
+			//replaced this line because the discrete implementation is cheaper
 			//if (glm::any(glm::lessThanEqual(t_max, t_min)))
 			if ((t_max.x <= t_min.x) || (t_max.y <= t_min.y) || (t_max.z <= t_min.z))
 			{
@@ -99,6 +100,7 @@ namespace geometry
 
 		AABB Bounds() const override
 		{
+			//TODO (OS): Implement this
 			return AABB(vec3(FLT_MIN), vec3(FLT_MAX));
 		}
 
