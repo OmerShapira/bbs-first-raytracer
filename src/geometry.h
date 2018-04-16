@@ -1,11 +1,18 @@
 #pragma once
+
+#include <algorithm>
+#include <memory>
+
 #include <3rdparty\glm\glm.hpp>
+
 #include "rt_math.h"
 #include "Material.h"
 #include "ray.h"
 
 using namespace glm;
 using std::shared_ptr;
+using std::make_shared;
+using std::static_pointer_cast;
 
 namespace geometry
 {
@@ -42,7 +49,7 @@ namespace geometry
 			}
 			return true;
 		}
-	private:
+
 		vec3 max__, min__;
 	};
 
@@ -55,24 +62,128 @@ namespace geometry
 		shared_ptr<Material> material;
 	};
 
-	class BVHNode : Hitable
+	class HitableList : public Hitable
 	{
 	public:
-		BVHNode() {}
+
+		bool Intersect(Ray const& Ray, vec2 t_range, HitRecord& rec) const override
+		{
+			bool hit_anything = false;
+
+			for (shared_ptr<Hitable> const& hitable : list)
+			{
+				HitRecord temp_hit_record;
+				if (hitable->Intersect(Ray, t_range, temp_hit_record))
+				{
+					rec = temp_hit_record;
+					t_range.y = min(t_range.y, temp_hit_record.t);
+					hit_anything = true;
+				}
+			}
+
+			return hit_anything;
+		}
+
+		AABB Bounds() const override
+		{
+			return AABB(vec3(FLT_MIN), vec3(FLT_MAX));
+		}
+
+		std::vector<shared_ptr<Hitable> > list;
+	};
+
+	class BVHNode : public Hitable
+	{
+	public:
+		BVHNode(HitableList& list)
+		{
+			BVHNode(list.list.begin(), list.list.end(), 0);
+		}
+		BVHNode(std::vector<shared_ptr<Hitable> >::iterator begin, std::vector<shared_ptr<Hitable> >::iterator end, uint depth)
+		{
+			if (end - begin == 0)
+			{
+				return;
+			}
+			if (end - begin == 1)
+			{
+				left = *begin;
+				bounds = left->Bounds();
+				return;
+			}
+			if (end - begin == 2)
+			{
+				left = *begin;
+				right = * (begin + 1);
+				bounds = left->Bounds().Union(right->Bounds());
+				return;
+			}
+
+			auto cmp_x = [](shared_ptr<Hitable> & a, shared_ptr<Hitable> & b) -> bool 
+			{ return a->Bounds().min__.x < b->Bounds().min__.x; };
+			auto cmp_y = [](shared_ptr<Hitable> & a, shared_ptr<Hitable> & b) -> bool 
+			{ return a->Bounds().min__.y < b->Bounds().min__.y; };
+			auto cmp_z = [](shared_ptr<Hitable> & a, shared_ptr<Hitable> & b) -> bool 
+			{ return a->Bounds().min__.z < b->Bounds().min__.z; };
+
+			switch (depth % 3)
+			{
+			case 0: 
+				std::nth_element(begin, begin + (end - begin) / 2, end, cmp_x);
+				break;
+			case 1:
+				std::nth_element(begin, begin + (end - begin) / 2, end, cmp_y);
+				break;
+			case 3:
+				std::nth_element(begin, begin + (end - begin) / 2, end, cmp_z);
+				break;
+			default:
+				break;
+			}
+
+			left = std::make_shared<BVHNode>(begin, begin + ((end - begin) / 2), depth + 1);
+			right = std::make_shared<BVHNode>(begin + ((end - begin) / 2) , end, depth + 1);
+			bounds = left->Bounds().Union(right->Bounds());
+		}
 
 		bool Intersect(Ray const& ray, vec2 t_range, HitRecord& rec) const override
 		{
-
+			if (!bounds.Intersect(ray))
+			{
+				return false;
+			}
+			HitRecord hitrec_r, hitrec_l;
+			bool hit_l = left && left->Intersect(ray, t_range, hitrec_l);
+			bool hit_r = right && right->Intersect(ray, t_range, hitrec_r);
+			if (hit_r && hit_l)
+			{
+				rec = (hitrec_l.t < hitrec_r.t) ? hitrec_l : hitrec_r;
+				return true;
+			}
+			if (hit_l)
+			{
+				rec = hitrec_l;
+				return true;
+			}
+			if (hit_r)
+			{
+				rec = hitrec_r;
+				return true;
+			}
 			return false;
 		}
+
 		AABB Bounds() const override
 		{
 			return bounds;
 		}
 		
 	private:
+
+		//void PopulateChildren(std::vector<shared_ptr<Hitable> >::iterator begin, std::vector<shared_ptr<Hitable> >::iterator end, uint depth)
+		//{}
+
 		AABB bounds;
-		//Should this be unique_ptr?
 		shared_ptr<Hitable> left, right;
 	};
 
@@ -133,38 +244,6 @@ namespace geometry
 
 		vec3 center;
 		float radius;
-	};
-
-
-
-	class HitableList : public Hitable
-	{
-	public:
-
-		bool Intersect(Ray const& Ray, vec2 t_range, HitRecord& rec) const override
-		{
-			bool hit_anything = false;
-
-			for (Sphere const& hitable : list)
-			{
-				HitRecord temp_hit_record;
-				if (hitable.Intersect(Ray, t_range, temp_hit_record))
-				{
-					rec = temp_hit_record;
-					t_range.y = min(t_range.y, temp_hit_record.t);
-					hit_anything = true;
-				}
-			}
-
-			return hit_anything;
-		}
-
-		AABB Bounds() const override
-		{
-			return AABB(vec3(FLT_MIN), vec3(FLT_MAX));
-		}
-
-		std::vector<Sphere> list;
 	};
 }
 
