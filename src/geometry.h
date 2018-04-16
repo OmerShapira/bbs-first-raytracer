@@ -52,8 +52,8 @@ namespace geometry
 				std::swap(t_min.z, t_max.z);
 			}
 			
-			t_min = glm::max(t_min, vec3(t_range.x));
-			t_max = glm::min(t_max, vec3(t_range.y));
+			t_min = glm::max(t_min, t_range.x);
+			t_max = glm::min(t_max, t_range.y);
 
 			//if (glm::any(glm::lessThanEqual(t_max, t_min)))
 			if ((t_max.x <= t_min.x) || (t_max.y <= t_min.y) || (t_max.z <= t_min.z))
@@ -195,10 +195,6 @@ namespace geometry
 		}
 		
 	private:
-
-		//void PopulateChildren(std::vector<shared_ptr<Hitable> >::iterator begin, std::vector<shared_ptr<Hitable> >::iterator end, uint depth)
-		//{}
-
 		AABB bounds;
 		shared_ptr<Hitable> left, right;
 	};

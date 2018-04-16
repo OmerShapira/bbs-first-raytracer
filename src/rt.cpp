@@ -30,22 +30,21 @@ using std::shared_ptr;
 using std::make_shared;
 using namespace geometry;
 
+int const RECURSION_DEPTH = 6;
+int const NUM_SAMPLES = 32;
+int const w = 512, h = 256;
 
 vec3 color(Ray const& r, Hitable& world, int recursion_num)
 {
-	//try to intersect some objects for visibility
 	HitRecord rec;
 	bool intersection = world.Intersect(r, vec2(0.001, FLT_MAX), rec);
 	//FIXME (OS): Magic number
 	if (intersection)
 	{
-		//vec3 normal = rec.normal * vec3(0.5) + vec3(0.5);
-		//return normal;
-		
 		Ray scattered(vec3(0), vec3(0));
 		vec3 attenuation;
 		bool does_scatter = rec.mat->Scatter(r, rec, attenuation, scattered);
-		if (does_scatter && (recursion_num < 8))
+		if (does_scatter && (recursion_num < RECURSION_DEPTH))
 		{
 			return attenuation * color(scattered, world, recursion_num + 1);
 		}
@@ -55,7 +54,7 @@ vec3 color(Ray const& r, Hitable& world, int recursion_num)
 		}
 	}
 
-	//let's apply some minimal shading
+	// sky shading
 	vec3 dir = r.direction;
 
 	dir /= sqrt(dot(r.direction, r.direction));
@@ -69,12 +68,10 @@ vec3 color(Ray const& r, Hitable& world, int recursion_num)
 vec3 sample(Hitable& world, Camera const& camera, ivec2 const& pos, int const num_samples, Randomization const randomization)
 {
 	vec3 accum;
-	//#pragma omp parallel for reduction(+:accum)
 	for (int i = 0; i < num_samples; ++i)
 	{
 		Ray r = camera.make_ray(pos, randomization);
-		vec3 c = color(r, world, 0);
-		accum += c;
+		accum += color(r, world, 0);
 	}
 	accum *= 1.0f / num_samples;
 	return accum;
@@ -91,7 +88,7 @@ int trace(Hitable& world, int w, int h, unsigned char * img)
 		#pragma omp parallel for
 		for (int i = 0; i < w; ++i)
 		{
-			vec3 c = sample(world, camera, ivec2(i, j), 32, Randomization::MonteCarlo);
+			vec3 c = sample(world, camera, ivec2(i, j), NUM_SAMPLES, Randomization::MonteCarlo);
 			c = sqrt(c);
 			//magic number for float truncation
 			img[(j*w + i) * 3 + 0] = int(c.r * 255.99);
@@ -104,7 +101,6 @@ int trace(Hitable& world, int w, int h, unsigned char * img)
 
 int main()
 {
-	int const w = 512, h = 256;
 	unsigned char *img = new unsigned char[w * h * 3];
 
 	HitableList world;
@@ -135,7 +131,7 @@ int main()
 
 
 
-	int n = 5;
+	int n = 4;
 	
 	auto s0 = make_shared<Sphere>(vec3(0, -1000, 0), 1000);
 	s0->material = make_shared<Lambertian>(vec3(0.2f, 0.2, 0.7));

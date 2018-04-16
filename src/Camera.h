@@ -20,7 +20,6 @@ public:
 	Camera(float fov_h, vec3 location, vec3 vup, vec3 lookat, float focus_dist, float aperture): location(location), focus_dist(focus_dist), aperture(aperture)
 	{
 		set_fov_h(fov_h);
-		//focus_dist = length(location - lookat);
 		//backness
 		w = normalize(location - lookat);
 		//rightness

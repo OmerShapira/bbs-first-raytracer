@@ -20,7 +20,6 @@ public:
 	bool Scatter(Ray const& ray_in, HitRecord const& rec, vec3& attenuation, Ray& ray_scattered) const override
 	{
 		vec3 direction = sample_in_sphere(vec3(0), vec3(1));
-		//place it in a unit sphere
 
 		direction += rec.normal;
 
