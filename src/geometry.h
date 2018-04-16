@@ -20,7 +20,7 @@ namespace geometry
 	class AABB 
 	{
 	public:
-		AABB() : min__(vec3(0.f)), max__(vec3(0.f)) {}
+		AABB() : min__(vec3(NAN)), max__(vec3(NAN)) {}
 		AABB (vec3 const& other_min, vec3 const& other_max)
 		{
 			min__ = other_min;
@@ -32,18 +32,31 @@ namespace geometry
 			return AABB(glm::min(other.min__, min__), glm::max(other.max__, max__));
 		}
 
-		bool Intersect(Ray const& ray) const
+		bool Intersect(Ray const& ray, vec2 t_range) const
 		{
 			vec3 inv_d = 1.f / ray.direction;
 			vec3 t_min = (min__ - ray.origin) * inv_d;
 			vec3 t_max = (max__ - ray.origin) * inv_d;
 
 			//TODO (OS): Optimize
-			if (inv_d.x < 0) std::swap(t_min.x, t_max.x);
-			if (inv_d.y < 0) std::swap(t_min.y, t_max.y);
-			if (inv_d.z < 0) std::swap(t_min.z, t_max.z);
+			if (inv_d.x < 0)
+			{
+				std::swap(t_min.x, t_max.x);
+			}
+			if (inv_d.y < 0)
+			{
+				std::swap(t_min.y, t_max.y);
+			}
+			if (inv_d.z < 0)
+			{
+				std::swap(t_min.z, t_max.z);
+			}
+			
+			t_min = glm::max(t_min, vec3(t_range.x));
+			t_max = glm::min(t_max, vec3(t_range.y));
 
-			if (glm::any(glm::lessThanEqual(t_max, t_min)))
+			//if (glm::any(glm::lessThanEqual(t_max, t_min)))
+			if ((t_max.x <= t_min.x) || (t_max.y <= t_min.y) || (t_max.z <= t_min.z))
 			{
 				return false;
 			}
@@ -89,16 +102,19 @@ namespace geometry
 			return AABB(vec3(FLT_MIN), vec3(FLT_MAX));
 		}
 
+		void Add(shared_ptr<Hitable> ptr)
+		{
+			list.push_back(ptr);
+		}
+
 		std::vector<shared_ptr<Hitable> > list;
 	};
 
 	class BVHNode : public Hitable
 	{
 	public:
-		BVHNode(HitableList& list)
-		{
-			BVHNode(list.list.begin(), list.list.end(), 0);
-		}
+		BVHNode(HitableList& list) : BVHNode(list.list.begin(), list.list.end(), 0) {}
+
 		BVHNode(std::vector<shared_ptr<Hitable> >::iterator begin, std::vector<shared_ptr<Hitable> >::iterator end, uint depth)
 		{
 			if (end - begin == 0)
@@ -148,7 +164,7 @@ namespace geometry
 
 		bool Intersect(Ray const& ray, vec2 t_range, HitRecord& rec) const override
 		{
-			if (!bounds.Intersect(ray))
+			if (!bounds.Intersect(ray, t_range))
 			{
 				return false;
 			}

@@ -59,3 +59,10 @@ vec2 sample_in_disk(vec2 center, vec2 radius)
 	} while (dot(out, out) >= 1);
 	return out * radius + center;
 }
+
+
+inline vec3 lerp(vec3 const v1, vec3 const v2, float t)
+{
+	return v1 * (1 - t) + v2 * t;
+}
+
