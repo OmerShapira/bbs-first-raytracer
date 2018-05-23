@@ -100,8 +100,7 @@ namespace geometry
 
 		AABB Bounds() const override
 		{
-			//TODO (OS): Implement this
-			return AABB(vec3(FLT_MIN), vec3(FLT_MAX));
+			return AABB(vec3(-FLT_MAX), vec3(FLT_MAX));
 		}
 
 		void Add(shared_ptr<Hitable> ptr)
