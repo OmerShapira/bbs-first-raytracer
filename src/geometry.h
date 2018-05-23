@@ -152,7 +152,7 @@ namespace geometry
 			case 1:
 				std::nth_element(begin, begin + (end - begin) / 2, end, cmp_y);
 				break;
-			case 3:
+			case 2:
 				std::nth_element(begin, begin + (end - begin) / 2, end, cmp_z);
 				break;
 			default:
